@@ -1,0 +1,859 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<title>Sliding Puzzle</title>
+	<!-- https://jamie-wong.com/2011/10/16/fifteen-puzzle-algorithm/ -->
+	<!-- <link rel="stylesheet" href="http://fonts.googleapis.com/css?family=Satisfy" type="text/css"> -->
+	<!-- <link rel="stylesheet" href="style/puzzle.css" type="text/css"> -->
+	<style>
+@keyframes shake {
+  0%, 100% {transform: rotate(0deg);}
+  10%, 30%, 50%, 70%, 90% {transform: rotate(-1.5deg);}
+  20%, 40%, 60%, 80% {transform: rotate(1.5deg);}
+}
+.shaking {animation: shake 1.5s ease-in-out infinite;}
+body {height: 100%;margin: 0;background-color: #f0f0f0;}
+.center{position: absolute;top: 50%;left: 50%;transform: translate(-50%, -50%);}
+.puzzle-container{width:425px;/*height:475px;*/overflow:hidden}
+.puzzle{overflow:hidden;border-radius:5px;-webkit-border-radius:5px;-moz-border-radius:5px;-o-border-radius:5px;-ms-border-radius:5px;position:relative;width:425px;height:720px;background-color:#e5e5e5;font-family:sans-serif;user-select:none;-webkit-user-select:none;-moz-user-select:none;-o-user-select:none;-ms-user-select:none;}
+.puzzle .overlay-container{width:425px;height:425px;position:absolute;top:0;left:0;z-index:10;}
+.puzzle .overlay-container .overlay{width:100%;height:100%;z-index:20;background-color:#202020;opacity:.8;color:#ccc;text-align:center;line-height: 425px;}
+.puzzle .control-bar{position:absolute;top:425px;left:5px;padding:5px 0;}
+.puzzle .control-bar .shuffle-button,
+.puzzle .control-bar .input-button,
+.puzzle .control-bar .reset-button,
+.puzzle .control-bar .solve-button{float:left;font-weight:bold;font-size:15px;margin-right: 5px;cursor: pointer;color:#556;border:1px solid #7f7f6d;border-radius:5px;-webkit-border-radius:5px;-moz-border-radius:5px;-o-border-radius:5px;-ms-border-radius:5px;background-image:-ms-linear-gradient:top;;background-image:-o-linear-gradient(top,#dbdbd5,#b7b7ab);background-image:-moz-linear-gradient(top,#dbdbd5,#b7b7ab);background-image:-webkit-linear-gradient(top,#dbdbd5,#b7b7ab);background-image:-ms-linear-gradient(top,#dbdbd5,#b7b7ab);box-shadow:inset 3px 3px 3px 0px rgba(255, 255, 255, 0.15), inset -3px -3px 3px rgba(0, 0, 0, 0.25);-webkit-box-shadow:inset 3px 3px 3px 0px rgba(255, 255, 255, 0.15), inset -3px -3px 3px rgba(0, 0, 0, 0.25);-moz-box-shadow:inset 3px 3px 3px 0px rgba(255, 255, 255, 0.15), inset -3px -3px 3px rgba(0, 0, 0, 0.25);-o-box-shadow:inset 3px 3px 3px 0px rgba(255, 255, 255, 0.15), inset -3px -3px 3px rgba(0, 0, 0, 0.25);-ms-box-shadow:inset 3px 3px 3px 0px rgba(255, 255, 255, 0.15), inset -3px -3px 3px rgba(0, 0, 0, 0.25);text-shadow:#f6f6f5 1px 1px 2px,#9c9c8b -1px -1px 2px;width:98px;height:38px;line-height:38px;text-align:center;user-select: none;}
+.puzzle .control-bar .solve-button{margin-right: 0;}
+.puzzle .control-bar .shuffle-button:hover,
+.puzzle .control-bar .input-button:hover,
+.puzzle .control-bar .reset-button:hover,
+.puzzle .control-bar .solve-button:hover{color:#828297}
+.puzzle .control-bar .shuffle-button:active,
+.puzzle .control-bar .input-button:active,
+.puzzle .control-bar .reset-button:active,
+.puzzle .control-bar .solve-button:active{background-image:-ms-linear-gradient:top;;background-image:-o-linear-gradient(top,#b7b7ab,#939381);background-image:-moz-linear-gradient(top,#b7b7ab,#939381);background-image:-webkit-linear-gradient(top,#b7b7ab,#939381);background-image:-ms-linear-gradient(top,#b7b7ab,#939381);text-shadow:#d2d2cb 1px 1px 2px,#747464 -1px -1px 2px;box-shadow:inset -3px -3px 3px 0px rgba(255, 255, 255, 0.15), inset 3px 3px 3px rgba(0, 0, 0, 0.25);-webkit-box-shadow:inset -3px -3px 3px 0px rgba(255, 255, 255, 0.15), inset 3px 3px 3px rgba(0, 0, 0, 0.25);-moz-box-shadow:inset -3px -3px 3px 0px rgba(255, 255, 255, 0.15), inset 3px 3px 3px rgba(0, 0, 0, 0.25);-o-box-shadow:inset -3px -3px 3px 0px rgba(255, 255, 255, 0.15), inset 3px 3px 3px rgba(0, 0, 0, 0.25);-ms-box-shadow:inset -3px -3px 3px 0px rgba(255, 255, 255, 0.15), inset 3px 3px 3px rgba(0, 0, 0, 0.25)}
+.puzzle .cell{position:absolute;font-size:35px;cursor: grab; user-select: none;}
+.puzzle .cell.pink{border:1px solid #c5c5c5;border-radius:5px;-webkit-border-radius:5px;-moz-border-radius:5px;-o-border-radius:5px;-ms-border-radius:5px;background-image:-ms-linear-gradient:top;background-image:-o-linear-gradient(top,#fec5e8,#ffccff);background-image:-moz-linear-gradient(top,#fec5e8,#ffccff);background-image:-webkit-linear-gradient(top,#fec5e8,#ffccff);background-image:-ms-linear-gradient(top,#fec5e8,#ffccff);box-shadow:inset 3px 3px 3px 0px rgba(255, 255, 255, 0.15), inset -3px -3px 3px rgba(0, 0, 0, 0.25);-webkit-box-shadow:inset 3px 3px 3px 0px rgba(255, 255, 255, 0.15), inset -3px -3px 3px rgba(0, 0, 0, 0.25);-moz-box-shadow:inset 3px 3px 3px 0px rgba(255, 255, 255, 0.15), inset -3px -3px 3px rgba(0, 0, 0, 0.25);-o-box-shadow:inset 3px 3px 3px 0px rgba(255, 255, 255, 0.15), inset -3px -3px 3px rgba(0, 0, 0, 0.25);-ms-box-shadow:inset 3px 3px 3px 0px rgba(255, 255, 255, 0.15), inset -3px -3px 3px rgba(0, 0, 0, 0.25);width:98px;height:98px;line-height:98px;text-align:center;}
+.puzzle .cell.mint{border:1px solid #c5c5c5;border-radius:5px;-webkit-border-radius:5px;-moz-border-radius:5px;-o-border-radius:5px;-ms-border-radius:5px;background-image:-ms-linear-gradient:top;background-image:-o-linear-gradient(top,#d2ebdd,#e6ffee);background-image:-moz-linear-gradient(top,#d2ebdd,#e6ffee);background-image:-webkit-linear-gradient(top,#d2ebdd,#e6ffee);background-image:-ms-linear-gradient(top,#d2ebdd,#e6ffee);box-shadow:inset 3px 3px 3px 0px rgba(255, 255, 255, 0.15), inset -3px -3px 3px rgba(0, 0, 0, 0.25);-webkit-box-shadow:inset 3px 3px 3px 0px rgba(255, 255, 255, 0.15), inset -3px -3px 3px rgba(0, 0, 0, 0.25);-moz-box-shadow:inset 3px 3px 3px 0px rgba(255, 255, 255, 0.15), inset -3px -3px 3px rgba(0, 0, 0, 0.25);-o-box-shadow:inset 3px 3px 3px 0px rgba(255, 255, 255, 0.15), inset -3px -3px 3px rgba(0, 0, 0, 0.25);-ms-box-shadow:inset 3px 3px 3px 0px rgba(255, 255, 255, 0.15), inset -3px -3px 3px rgba(0, 0, 0, 0.25);width:98px;height:98px;line-height:98px;text-align:center;}
+.puzzle .cell.buttermilk{border:1px solid #c5c5c5;border-radius:5px;-webkit-border-radius:5px;-moz-border-radius:5px;-o-border-radius:5px;-ms-border-radius:5px;background-image:-ms-linear-gradient:top;background-image:-o-linear-gradient(top,#faf1b6,#ffff99);background-image:-moz-linear-gradient(top,#faf1b6,#ffff99);background-image:-webkit-linear-gradient(top,#faf1b6,#ffff99);background-image:-ms-linear-gradient(top,#faf1b6,#ffff99);box-shadow:inset 3px 3px 3px 0px rgba(255, 255, 255, 0.15), inset -3px -3px 3px rgba(0, 0, 0, 0.25);-webkit-box-shadow:inset 3px 3px 3px 0px rgba(255, 255, 255, 0.15), inset -3px -3px 3px rgba(0, 0, 0, 0.25);-moz-box-shadow:inset 3px 3px 3px 0px rgba(255, 255, 255, 0.15), inset -3px -3px 3px rgba(0, 0, 0, 0.25);-o-box-shadow:inset 3px 3px 3px 0px rgba(255, 255, 255, 0.15), inset -3px -3px 3px rgba(0, 0, 0, 0.25);-ms-box-shadow:inset 3px 3px 3px 0px rgba(255, 255, 255, 0.15), inset -3px -3px 3px rgba(0, 0, 0, 0.25);width:98px;height:98px;line-height:98px;text-align:center;}
+.puzzle .cell.lightskyblue{border:1px solid #c5c5c5;border-radius:5px;-webkit-border-radius:5px;-moz-border-radius:5px;-o-border-radius:5px;-ms-border-radius:5px;background-image:-ms-linear-gradient:top;background-image:-o-linear-gradient(top,#c2f0ff,#99ccff);background-image:-moz-linear-gradient(top,#c2f0ff,#99ccff);background-image:-webkit-linear-gradient(top,#c2f0ff,#99ccff);background-image:-ms-linear-gradient(top,#c2f0ff,#99ccff);box-shadow:inset 3px 3px 3px 0px rgba(255, 255, 255, 0.15), inset -3px -3px 3px rgba(0, 0, 0, 0.25);-webkit-box-shadow:inset 3px 3px 3px 0px rgba(255, 255, 255, 0.15), inset -3px -3px 3px rgba(0, 0, 0, 0.25);-moz-box-shadow:inset 3px 3px 3px 0px rgba(255, 255, 255, 0.15), inset -3px -3px 3px rgba(0, 0, 0, 0.25);-o-box-shadow:inset 3px 3px 3px 0px rgba(255, 255, 255, 0.15), inset -3px -3px 3px rgba(0, 0, 0, 0.25);-ms-box-shadow:inset 3px 3px 3px 0px rgba(255, 255, 255, 0.15), inset -3px -3px 3px rgba(0, 0, 0, 0.25);width:98px;height:98px;line-height:98px;text-align:center;}
+.puzzle .cell.empty{border:1px solid #c5c5c5;border-radius:5px;-webkit-border-radius:5px;-moz-border-radius:5px;-o-border-radius:5px;-ms-border-radius:5px;width:98px;height:98px;background-color:#ddd;display: none;}
+.solution-container {position:absolute;top: 475px;width: 425px;height: 245px;font-size: 1.15em;}
+.solution {padding: 10px;background: #f5f5f5;margin: 5px;border-radius: 5px;height: 215px;}
+.solution span:not(:last-child)::after {
+  content:'→';
+  color: #ff9900;
+}
+	</style>
+	<script src="https://cdn.bootcdn.net/ajax/libs/jquery/1.6.4/jquery.min.js"></script>
+	<script src="https://cdn.bootcdn.net/ajax/libs/underscore.js/1.2.0/underscore-min.js"></script>
+	<!-- <script src="src/shared.js"></script> -->
+	<script type="text/javascript"> /* src/shared.js */
+		(function() {
+		  this.ABOVE = "ABOVE";
+		  this.RIGHT = "RIGHT";
+		  this.LEFT = "LEFT";
+		  this.BELOW = "BELOW";
+		  this.directionToDelta = function(direction) {
+		    switch (direction) {
+		      case ABOVE:
+		        return [-1, 0];  //[行,列]; 向上移动 = 【行-1,列不变】
+		      case RIGHT:
+		        return [0, 1];
+		      case BELOW:
+		        return [1, 0];
+		      case LEFT:
+		        return [0, -1];
+		    }
+		  };
+		  this.directionsAreOpposites = function(a, b) {
+		    var adc, adr, bdc, bdr, _ref, _ref2;  //dr=row行,dc=column列；_ref和_ref2分别是两个移动的方向, 如果两组移动相加偏移量为0，则是“反向”
+		    _ref = directionToDelta(a), adr = _ref[0], adc = _ref[1];
+		    _ref2 = directionToDelta(b), bdr = _ref2[0], bdc = _ref2[1];
+		    return (adr + bdr === 0) && (adc + bdc === 0);
+		  };
+		  this.INIT_GRID = [[1, 2, 3, 4], [5, 6, 7, 8], [9, 10, 11, 12], [13, 14, 15, 0]];
+		}).call(this);
+	</script>
+	<!-- <script src="src/grid.js"></script> -->
+	<script type="text/javascript"> /* src/grid.js */
+		(function() {
+		  this.originalPosition = function(num) {  //计算复原后的位置
+		    return [parseInt((num - 1) / 4, 10), parseInt((num - 1) % 4, 10)];
+		  };
+		  this.rectilinearDistance = function(num, curRow, curCol) {  //计算曼哈顿距离
+		    var origCol, origRow, _ref;
+		    _ref = originalPosition(num), origRow = _ref[0], origCol = _ref[1];
+		    return Math.abs(origRow - curRow) + Math.abs(origCol - curCol);
+		  };
+		  this.Grid = (function() {
+		    function Grid(grid, emptyPos) {
+		      var row, _i, _len;
+		      if (grid == null) {
+		        grid = INIT_GRID;
+		      }
+		      if (emptyPos == null) {
+		        emptyPos = [3, 3];
+		      }
+		      this.emptyPos = [].concat(emptyPos);
+		      this.grid = [];
+		      for (_i = 0, _len = grid.length; _i < _len; _i++) {
+		        row = grid[_i];
+		        this.grid.push([].concat(row));
+		      }
+		    }
+		    Grid.prototype.validMoves = function() {
+		      var colNum, rowNum, valid, _ref;
+		      _ref = this.emptyPos, rowNum = _ref[0], colNum = _ref[1];
+		      valid = [];
+		      if (colNum !== 0) {
+		        valid.push(LEFT);
+		      }
+		      if (colNum !== 3) {
+		        valid.push(RIGHT);
+		      }
+		      if (rowNum !== 0) {
+		        valid.push(ABOVE);
+		      }
+		      if (rowNum !== 3) {
+		        valid.push(BELOW);
+		      }
+		      return valid;
+		    };
+		    Grid.prototype.positionToMove = function(rowNum, colNum) {
+		      var emptyCol, emptyRow, _ref;
+		      _ref = this.emptyPos, emptyRow = _ref[0], emptyCol = _ref[1];
+		      if (rowNum === emptyRow) {
+		        if (colNum === emptyCol - 1) {
+		          return LEFT;
+		        }
+		        if (colNum === emptyCol + 1) {
+		          return RIGHT;
+		        }
+		      }
+		      if (colNum === emptyCol) {
+		        if (rowNum === emptyRow - 1) {
+		          return ABOVE;
+		        }
+		        if (rowNum === emptyRow + 1) {
+		          return BELOW;
+		        }
+		      }
+		      return null;
+		    };
+		    Grid.prototype.applyMoveFrom = function(sourceDirection) {
+		      var deltaCol, deltaRow, emptyPos, grid, nextGrid, number, row, sourceCol, sourceRow, targetCol, targetRow, _i, _len, _ref, _ref2, _ref3, _ref4;
+		      _ref = this.emptyPos, targetRow = _ref[0], targetCol = _ref[1];
+		      _ref2 = directionToDelta(sourceDirection), deltaRow = _ref2[0], deltaCol = _ref2[1];
+		      emptyPos = (_ref3 = [targetRow + deltaRow, targetCol + deltaCol], sourceRow = _ref3[0], sourceCol = _ref3[1], _ref3);
+		      grid = [];
+		      _ref4 = this.grid;
+		      for (_i = 0, _len = _ref4.length; _i < _len; _i++) {
+		        row = _ref4[_i];
+		        grid.push([].concat(row));
+		      }
+		      grid[targetRow][targetCol] = grid[sourceRow][sourceCol];
+		      grid[sourceRow][sourceCol] = 0;
+		      nextGrid = new Grid(grid, emptyPos);
+		      number = grid[targetRow][targetCol];
+		      nextGrid._lowerSolutionBound = this.lowerSolutionBound() - rectilinearDistance(number, sourceRow, sourceCol) + rectilinearDistance(number, targetRow, targetCol);
+		      return nextGrid;
+		    };
+		    Grid.prototype.applyMoves = function(sourceDirections) {
+		      var dir, nextGrid, _i, _len;
+		      nextGrid = this;
+		      for (_i = 0, _len = sourceDirections.length; _i < _len; _i++) {
+		        dir = sourceDirections[_i];
+		        nextGrid = nextGrid.applyMoveFrom(dir);
+		      }
+		      return nextGrid;
+		    };
+		    Grid.prototype.lowerSolutionBound = function() {
+		      /*
+		            This calculates a lower bound on the minimum
+		            number of steps required to solve the puzzle
+
+		            This is the sum of the rectilinear distances
+		            from where each number is to where it should
+		            be
+		          */      var colNum, moveCount, number, rowNum;
+		      if (!(this._lowerSolutionBound != null)) {
+		        moveCount = 0;
+		        for (rowNum in this.grid) {
+		          rowNum = parseInt(rowNum, 10);
+		          for (colNum in this.grid[rowNum]) {
+		            colNum = parseInt(colNum, 10);
+		            number = this.grid[rowNum][colNum];
+		            if (number === 0) {
+		              continue;
+		            }
+		            moveCount += rectilinearDistance(number, rowNum, colNum);
+		          }
+		        }
+		        this._lowerSolutionBound = moveCount;
+		      }
+		      return this._lowerSolutionBound;
+		    };
+		    Grid.prototype.isSolved = function() {
+		      return this.lowerSolutionBound() === 0;
+		    };
+		    Grid.prototype.log = function() {
+		      var row, _i, _len, _ref, _results;
+		      console.log("Empty: " + this.emptyPos);
+		      _ref = this.grid;
+		      _results = [];
+		      for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+		        row = _ref[_i];
+		        _results.push(console.log(JSON.stringify(row)));
+		      }
+		      return _results;
+		    };
+		    return Grid;
+		  })();
+		}).call(this);
+	</script>
+	<!-- <script src="src/solver.js"></script> -->
+	<script type="text/javascript">  /* src/solver.js */
+		(function() {
+		  this.SolverState = (function() {
+		    function SolverState(grid, steps) {
+		      var lowerSolutionBound;
+		      this.grid = grid;
+		      lowerSolutionBound = this.grid.lowerSolutionBound();
+		      this.steps = [].concat(steps);
+		      this.solved = this.grid.isSolved();
+		      this.val = lowerSolutionBound + steps.length;
+		    }
+		    return SolverState;
+		  })();
+		  this.SolverStateMinHeap = (function() {
+		    SolverStateMinHeap.prototype.maxSize = 100000;
+		    function SolverStateMinHeap() {
+		      this.data = [];
+		    }
+		    SolverStateMinHeap.prototype.enqueue = function(pt) {
+		      this.data.push(pt);
+		      this.bubbleUp(this.data.length - 1);
+		      if (this.data.length === this.maxSize) {
+		        return this.data.pop();
+		      }
+		    };
+		    SolverStateMinHeap.prototype.dequeue = function() {
+		      var end, ret;
+		      ret = this.data[0];
+		      end = this.data.pop();
+		      if (this.data.length > 0) {
+		        this.data[0] = end;
+		        this.bubbleDown(0);
+		      }
+		      return ret;
+		    };
+		    SolverStateMinHeap.prototype.bubbleUp = function(curPos) {
+		      var cur, parent, parentPos;
+		      if (curPos === 0) {
+		        return;
+		      }
+		      parentPos = ~~((curPos - 1) / 2);
+		      cur = this.data[curPos];
+		      parent = this.data[parentPos];
+		      if (cur.val < parent.val) {
+		        this.data[curPos] = parent;
+		        this.data[parentPos] = cur;
+		        return this.bubbleUp(parentPos);
+		      }
+		    };
+		    SolverStateMinHeap.prototype.bubbleDown = function(curPos) {
+		      var cur, left, leftPos, right, rightPos, swapPos;
+		      leftPos = curPos * 2 + 1;
+		      rightPos = curPos * 2 + 2;
+		      cur = this.data[curPos];
+		      left = this.data[leftPos];
+		      right = this.data[rightPos];
+		      swapPos = null;
+		      if ((left != null) && left.val < cur.val) {
+		        swapPos = leftPos;
+		      }
+		      if ((right != null) && right.val < left.val && right.val < cur.val) {
+		        swapPos = rightPos;
+		      }
+		      if (swapPos != null) {
+		        this.data[curPos] = this.data[swapPos];
+		        this.data[swapPos] = cur;
+		        return this.bubbleDown(swapPos);
+		      }
+		    };
+		    SolverStateMinHeap.prototype.empty = function() {
+		      return this.data.length === 0;
+		    };
+		    return SolverStateMinHeap;
+		  })();
+		  this.solve = function(startGrid, _arg) {
+		    var candidates, complete, curState, error, frontier, grid, its, lastStep, nextGrid, nextState, nextSteps, sourceDirection, startState, steps, _results;
+		    complete = _arg.complete, error = _arg.error, frontier = _arg.frontier;
+		        if (complete != null) {
+		      complete;
+		    } else {
+		      complete = $.noop;
+		    };
+		        if (error != null) {
+		      error;
+		    } else {
+		      error = $.noop;
+		    };
+		    if (!(frontier != null)) {
+		      frontier = new SolverStateMinHeap;
+		      startState = new SolverState(startGrid, []);
+		      frontier.enqueue(startState);
+		    }
+		    its = 0;
+		    _results = [];
+		    while (!frontier.empty()) {
+		      its += 1;
+		      if (its > 1000) {
+		        window.setTimeout(function() {
+		          return solve(startGrid, {
+		            complete: complete,
+		            error: error,
+		            frontier: frontier
+		          });
+		        }, 10);
+		        return;
+		      }
+		      curState = frontier.dequeue();
+		      if (curState.solved) {
+		        steps = curState.steps;
+		        complete({
+		          steps: curState.steps,
+		          iterations: its
+		        });
+		        return;
+		      }
+		      grid = curState.grid;
+		      steps = curState.steps;
+		      candidates = _.shuffle(grid.validMoves());
+		      lastStep = _.last(steps);
+		      if (lastStep != null) {
+		        candidates = _(candidates).filter(function(x) {
+		          return !directionsAreOpposites(x, lastStep);
+		        });
+		      }
+		      _results.push((function() {
+		        var _i, _len, _results2;
+		        _results2 = [];
+		        for (_i = 0, _len = candidates.length; _i < _len; _i++) {
+		          sourceDirection = candidates[_i];
+		          nextGrid = grid.applyMoveFrom(sourceDirection);
+		          nextSteps = steps.concat([sourceDirection]);
+		          nextState = new SolverState(nextGrid, nextSteps);
+		          _results2.push(frontier.enqueue(nextState));
+		        }
+		        return _results2;
+		      })());
+		    }
+		    return _results;
+		  };
+		}).call(this);
+	</script>
+	<!-- <script src="src/puzzle.js"></script> -->
+	<script type="text/javascript"> /* src/puzzle.js */
+		(function() {
+		  var ControlBarView, OverlayView, PuzzleCellView, PuzzleView;
+		  var __bind = function(fn, me){ return function(){ return fn.apply(me, arguments); }; };
+		  PuzzleCellView = (function() {
+		    PuzzleCellView.prototype.spacing = 5;
+		    PuzzleCellView.prototype.cellSize = 100;
+		    function PuzzleCellView(_arg) {
+		      var origColNum, origRowNum;
+		      this.number = _arg.number,this.draggable = _arg.draggable, this.controller = _arg.controller;
+		      this.node = $('<div/>', {
+		        "class": 'cell',
+		        text: this.number===0?"":this.number
+		      });
+		      if(this.number===0){
+		        this.node.addClass("empty");
+		      }
+		      this.node.mousedown(__bind(function() {
+		        return this.controller.handleCellClicked(this.rowNum, this.colNum);
+		      }, this));
+
+		      origRowNum = parseInt((this.number - 1) / 4, 10);
+		      origColNum = parseInt((this.number - 1) % 4, 10);
+		      const colorClassName = ['pink','mint','buttermilk','lightskyblue'];  //修改和实物相同外观
+		      this.node.addClass(colorClassName[(origRowNum + origColNum) % 4]);
+		      this.node.attr("draggable", this.draggable);
+		    }
+		    PuzzleCellView.prototype.setDraggable = function(isDraggable) {
+		      this.node.attr("draggable",isDraggable);
+		      if(isDraggable){
+		        this.node.addClass("shaking");
+		      }else{
+		        this.node.removeClass("shaking");
+		      }
+		    };
+		    PuzzleCellView.prototype.setPosition = function(rowNum, colNum, duration, cb) {
+		      this.rowNum = rowNum;
+		      this.colNum = colNum;
+		      if (duration == null) {
+		        duration = 0;
+		      }
+		      if (cb == null) {
+		        cb = $.noop;
+		      }
+		      return this.node.animate({
+		        top: "" + (this.spacing + this.rowNum * (this.spacing + this.cellSize)) + "px",
+		        left: "" + (this.spacing + this.colNum * (this.spacing + this.cellSize)) + "px"
+		      }, duration, cb);
+		    };
+		    return PuzzleCellView;
+		  })();
+		  ControlBarView = (function() {
+		    function ControlBarView(_arg) {
+		      var shuffleBtn, solveBtn, titleText;
+		      this.controller = _arg.controller;
+		      this.node = $('<div/>', {
+		        "class": 'control-bar'
+		      });
+		      shuffleBtn = $('<div/>', {
+		        text: 'shuffle',
+		        "class": 'shuffle-button',
+		        click: __bind(function() {
+		          return this.controller.handleShuffleClicked();
+		        }, this)
+		      });
+		      inputBtn = $('<div/>', {
+                text: 'input',
+                "class": 'input-button',
+                click: __bind(function() {
+                  return this.controller.handleInputClicked();
+                }, this)
+              });
+              resetBtn = $('<div/>', {
+                text: 'reset',
+                "class": 'reset-button',
+                click: __bind(function() {
+                  return this.controller.handleResetClicked();
+                }, this)
+              });
+		      // titleText = $('<div/>', {
+		      //   text: 'Fifteen',
+		      //   "class": 'title-text'
+		      // });
+		      solveBtn = $('<div/>', {
+		        text: 'solve',
+		        "class": 'solve-button',
+		        click: __bind(function() {
+		          return this.controller.handleSolveClicked();
+		        }, this)
+		      });
+		      this.controls = {
+		        'shuffleBtn':shuffleBtn[0],
+		        'inputBtn':inputBtn[0],
+		        'resetBtn':resetBtn[0],
+		        'solveBtn':solveBtn[0]
+		      };
+		      for(btn of [shuffleBtn, inputBtn, resetBtn, solveBtn]){
+		        this.node.append(btn);
+		      }
+		    }
+		    return ControlBarView;
+		  })();
+		  OverlayView = (function() {
+		    function OverlayView(_arg) {
+		      this.controller = _arg.controller;
+		      this.node = $('<div/>', {
+		        "class": 'overlay-container'
+		      });
+		      this.overlay = $('<div/>', {
+		        "class": 'overlay'
+		      });
+		      this.glowing = false;
+		      this.node.append(this.overlay);
+		      this.node.hide();
+		    }
+		    OverlayView.prototype.setMessage = function(msg) {
+		      return this.overlay.text(msg);
+		    };
+		    OverlayView.prototype.show = function(msg, cb) {
+		      if (msg != null) {
+		        this.setMessage(msg);
+		      }
+		      return this.node.fadeIn(__bind(function() {
+		        if (cb) {
+		          cb();
+		        }
+		        this.glowing = true;
+		        return this.glowOut();
+		      }, this));
+		    };
+		    OverlayView.prototype.hide = function(cb) {
+		      this.glowing = false;
+		      return this.node.fadeOut(cb);
+		    };
+		    OverlayView.prototype.glowOut = function() {
+		      if (!this.glowing) {
+		        return;
+		      }
+		      return this.overlay.animate({
+		        opacity: 0.4
+		      }, 1000, __bind(function() {
+		        return this.glowIn();
+		      }, this));
+		    };
+		    OverlayView.prototype.glowIn = function() {
+		      if (!this.glowing) {
+		        return;
+		      }
+		      return this.overlay.animate({
+		        opacity: 0.6
+		      }, 1000, __bind(function() {
+		        return this.glowOut();
+		      }, this));
+		    };
+		    return OverlayView;
+		  })();
+		  SolutionView = (function(){
+		    function SolutionView() {
+		      this.node = $('<div/>', {
+		        "class": 'solution-container'
+		      });
+		      this.solution = $('<div/>', {
+		        "class": 'solution'
+		      });
+		      this.node.append(this.solution);
+		    };
+		    SolutionView.prototype.showSolution = function(solution){
+		    	this.solution_steps = solution;
+		    	this.solution[0].innerHTML = solution.map(x=>"<span>"+x+"</span>").join("\n");
+		    };
+		    return SolutionView;
+		  })();
+		  PuzzleView = (function() {
+		    function PuzzleView(_arg) {
+		      var cell, colNum, grid, num, rowNum;
+		      this.controller = _arg.controller, this.container = _arg.container, grid = _arg.grid;
+		      this.container.addClass('puzzle-container');
+		      this.node = $('<div/>').addClass('puzzle').appendTo(this.container);
+		      this.controlsShown = true;
+		      this.moving = false;
+		      this.moveQueue = [];
+		      this.cellViews = [];
+		      this.inputMode = false; // 添加一个状态变量，用于控制拖拽模式
+		      for (rowNum in grid) {
+		        rowNum = parseInt(rowNum, 10);
+		        this.cellViews[rowNum] = [];
+		        for (colNum in grid[rowNum]) {
+		          colNum = parseInt(colNum, 10);
+		          num = grid[rowNum][colNum];
+		          if (num === 0) {
+		            this.emptyPos = [rowNum, colNum];
+		          }
+	              cell = new PuzzleCellView({
+	                number: num,
+	                draggable: this.inputMode,
+	                controller: this.controller
+	              });
+	              cell.setPosition(rowNum, colNum);
+	              //Drag & Drop
+	              cell.node[0].addEventListener('dragstart', (e) => {
+	                  draggedElement = e.target;
+	                  e.dataTransfer.effectAllowed = 'move';
+	                  e.dataTransfer.setData('text/html', e.target.outerHTML);
+	                  e.target.classList.add('dragging');
+	              });
+	              cell.node[0].addEventListener('dragend', (e) => {
+	                  e.target.classList.remove('dragging');
+	              });
+	              cell.node[0].addEventListener('dragover', (e) => {
+	                  e.preventDefault();
+	                  e.dataTransfer.dropEffect = 'move';
+	              });
+	              cell.node[0].addEventListener('dragenter', (e) => {
+	                  e.target.classList.add('over');
+	              });
+	              cell.node[0].addEventListener('dragleave', (e) => {
+	                  e.target.classList.remove('over');
+	              });
+	              cell.node[0].addEventListener('drop', (e) => {
+	                  e.preventDefault();
+	                  if (e.target.classList.contains('cell') && e.target !== draggedElement) {
+	                      const targetElement = e.target;
+	                      // Swap positions
+	                      const draggedTop = draggedElement.style.top;
+	                      const draggedLeft = draggedElement.style.left;
+	                      const targetTop = targetElement.style.top;
+	                      const targetLeft = targetElement.style.left;
+	                      draggedElement.style.top = targetTop;
+	                      draggedElement.style.left = targetLeft;
+	                      targetElement.style.top = draggedTop;
+	                      targetElement.style.left = draggedLeft;
+	                      draggedElement.classList.remove('dragging');
+	                      targetElement.classList.remove('over');
+	                      // Set puzzle state
+	                      num1=draggedElement.innerHTML===""?0:parseInt(draggedElement.innerHTML);
+	                      num2=targetElement.innerHTML===""?0:parseInt(targetElement.innerHTML);
+	                      r1 = this.controller.grid.grid.findIndex(x=>x.includes(num1));
+	                      c1 = this.controller.grid.grid[r1].indexOf(num1);
+	                      r2 = this.controller.grid.grid.findIndex(x=>x.includes(num2));
+	                      c2 = this.controller.grid.grid[r2].indexOf(num2);
+	                      puzzle.grid.grid[r1][c1]=num2;
+	                      puzzle.grid.grid[r2][c2]=num1;
+	                      this.controller.grid.grid[r1][c1]=num2;
+	                      this.controller.grid.grid[r2][c2]=num1;
+	                      [ this.cellViews[r1][c1], this.cellViews[r2][c2] ] = [ this.cellViews[r2][c2], this.cellViews[r1][c1] ];
+	                      if(num1===0){
+	                        puzzle.grid.emptyPos = [r2,c2];
+	                        this.controller.grid.emptyPos = [r2,c2];
+	                        this.emptyPos = [r2,c2];
+	                      }
+	                      if(num2===0){
+	                        puzzle.grid.emptyPos = [r1,c1];
+	                        this.controller.grid.emptyPos = [r1,c1];
+	                        this.emptyPos = [r1,c1];
+	                      }
+	                  }
+	              });
+	              this.node.append(cell.node);
+		          this.cellViews[rowNum].push(cell);
+		        }
+		      }
+		      this.controlBarView = new ControlBarView({
+		        controller: this.controller
+		      });
+		      this.node.append(this.controlBarView.node);
+		      this.overlayView = new OverlayView({
+		        controller: this.controller
+		      });
+		      this.node.append(this.overlayView.node);
+		      this.solutionView = new SolutionView();
+		      this.node.append(this.solutionView.node);
+		    }
+		    // 将视图调整到指定的题目布局
+		    PuzzleView.prototype.setGrid = function(grid) {
+		      this.emptyPos = grid.emptyPos;
+		      targetCellViews = [[null,null,null,null],[null,null,null,null],[null,null,null,null],[null,null,null,null]];
+		      this.cellViews.forEach(row=>{
+			    for(cell of row){
+			        if(cell){
+			            idx_row = grid.grid.findIndex(x=>x.includes(cell.number));
+			            idx_col = grid.grid[idx_row].indexOf(cell.number);
+			            cell.setPosition(idx_row, idx_col);
+			            targetCellViews[idx_row][idx_col] = cell;
+			        }
+			    }
+			  });
+			  this.cellViews = targetCellViews;
+		    };
+		    // 切换视图拖拽属性
+		    PuzzleView.prototype.toggleDraggable = function() {
+		      this.inputMode = !this.inputMode;
+		      this.cellViews.forEach(row=>{
+			    for(cell of row){
+			      if(cell){
+			        cell.setDraggable(this.inputMode);
+			      }
+			    }
+			  });
+			  if(this.inputMode){
+			    $(".empty").show();
+			  }else{
+			    $(".empty").hide();
+			  }
+		    };
+		    PuzzleView.prototype.queueMoves = function(moves) {
+		      return this.moveQueue = this.moveQueue.concat(moves);
+		    };
+		    PuzzleView.prototype.runQueue = function(duration, pause, cb) {
+		      if (cb == null) {
+		        cb = $.noop;
+		      }
+		      if (this.moveQueue.length === 0) {
+		        cb();
+		        return;
+		      }
+		      this.moving = true;
+		      return this.moveFrom(this.moveQueue.shift(), duration, __bind(function() {
+		        if (this.moveQueue.length > 0) {
+		          return setTimeout(__bind(function() {
+		            return this.runQueue(duration, pause, cb);
+		          }, this), pause);
+		        } else {
+		          this.moving = false;
+		          return cb();
+		        }
+		      }, this));
+		    };
+		    PuzzleView.prototype.moveFrom = function(sourceDirection, duration, cb) {
+		      var cellView, deltaCol, deltaRow, sourceCol, sourceRow, targetCol, targetRow, _ref, _ref2, _ref3;
+		      _ref = this.emptyPos, targetRow = _ref[0], targetCol = _ref[1];
+		      _ref2 = directionToDelta(sourceDirection), deltaRow = _ref2[0], deltaCol = _ref2[1];
+		      this.emptyPos = (_ref3 = [targetRow + deltaRow, targetCol + deltaCol], sourceRow = _ref3[0], sourceCol = _ref3[1], _ref3);
+		      cellView = this.cellViews[sourceRow][sourceCol];
+		      this.cellViews[targetRow][targetCol] = cellView;
+		      this.cellViews[sourceRow][sourceCol] = null;
+		      return cellView.setPosition(targetRow, targetCol, duration, cb);
+		    };
+		    PuzzleView.prototype.hideControls = function(cb) {
+		      this.controlsShown = false;
+		      return $(this.node).animate({
+		        height: "-=50px"
+		      }, cb);
+		    };
+		    PuzzleView.prototype.showControls = function(cb) {
+		      this.controlsShown = true;
+		      return $(this.node).animate({
+		        height: "+=50px"
+		      }, cb);
+		    };
+		    PuzzleView.prototype.showOverlay = function(msg, cb) {
+		      return this.overlayView.show(msg, cb);
+		    };
+		    PuzzleView.prototype.setOverlayMessage = function(msg) {
+		      return this.overlayView.setMessage(msg);
+		    };
+		    PuzzleView.prototype.hideOverlay = function(cb) {
+		      return this.overlayView.hide(cb);
+		    };
+		    PuzzleView.prototype.isInteractive = function() {
+		      return this.controlsShown && !this.moving;
+		    };
+		    return PuzzleView;
+		  })();
+		  this.randomMoveList = function(grid, nMoves, moveList) {
+		    var last, ldc, ldr, nextGrid, sourceDirection, validMoves, _ref;
+		    if (moveList == null) {
+		      moveList = [];
+		    }
+		    if (moveList.length === nMoves) {
+		      return moveList;
+		    }
+		    validMoves = grid.validMoves();
+		    if (moveList.length > 0) {
+		      last = _.last(moveList);
+		      _ref = directionToDelta(last), ldr = _ref[0], ldc = _ref[1];
+		      validMoves = _.filter(validMoves, function(m) {
+		        return !directionsAreOpposites(last, m);
+		      });
+		    }
+		    sourceDirection = _.shuffle(validMoves)[0];
+		    nextGrid = grid.applyMoveFrom(sourceDirection);
+		    moveList.push(sourceDirection);
+		    return randomMoveList(nextGrid, nMoves, moveList);
+		  };
+		  this.Puzzle = (function() {
+		    Puzzle.prototype.moveDuration = 100;
+		    Puzzle.prototype.movePause = 20;
+		    function Puzzle(container) {
+		      this.container = container;
+		      this.grid = new Grid(INIT_GRID, [3, 3]);
+		      this.view = new PuzzleView({
+		        container: this.container,
+		        grid: INIT_GRID,
+		        controller: this
+		      });
+		      this.lastState = new Grid(INIT_GRID, [3, 3]);
+		    }
+		    Puzzle.prototype.shuffle = function(nMoves, cb) {
+		      return this.applyMoves(randomMoveList(this.grid, nMoves), cb);
+		    };
+		    Puzzle.prototype.applyMoves = function(moves, cb) {
+		      this.grid = this.grid.applyMoves(moves);
+		      this.view.queueMoves(moves);
+		      return this.view.runQueue(this.moveDuration, this.movePause, cb);
+		    };
+		    Puzzle.prototype.handleShuffleClicked = function() {
+		      if (this.view.isInteractive()) {
+		        this.view.showOverlay('shuffling');
+		        //return this.view.hideControls(__bind(function() {
+		          return this.shuffle(25, __bind(function() {
+		            this.view.hideOverlay();
+		            this.lastState = this.grid;
+		            //return this.view.showControls();
+		          }, this));
+		        //}, this));
+		      }
+		    };
+		    Puzzle.prototype.handleSolveClicked = function() {
+		      if (this.view.isInteractive() && !this.grid.isSolved()) {
+		        this.lastState = this.grid;
+		        var gridState = structuredClone(this.lastState);
+		        //return this.view.hideControls(__bind(function() {
+		          return this.view.showOverlay('solving', __bind(function() {
+		            return solve(this.grid, {
+		              complete: __bind(function(_arg) {
+		                var steps;
+		                steps = _arg.steps;
+		                solution = [];
+		                for(move of steps){
+		                  [empty_row, empty_col] = gridState.emptyPos;
+		                  [target_row, target_col] = [[...gridState.emptyPos], [...directionToDelta(move)]].reduce((x,y)=>[x[0]+y[0],x[1]+y[1]]);
+		                  moveNumber = gridState.grid[target_row][target_col];
+		                  // log_state = {'emptyPos':gridState.emptyPos.toString(), 'delta':[...directionToDelta(move)].toString(), 'move':move, 'targetPos':[target_row, target_col].toString(), 'moveNumer':moveNumber};
+		                  // console.log(log_state);
+		                  // console.log(gridState.grid.map(x=>x.join(" ")).join("\n"));
+		                  solution.push(moveNumber);
+		                  gridState.emptyPos = [target_row, target_col];
+		                  gridState.grid[empty_row][empty_col] = moveNumber;
+		                  gridState.grid[target_row][target_col] = 0;
+		                }
+		                console.log(steps);
+		                console.log(solution);
+		                this.view.solutionView.showSolution(solution);
+		                return this.view.hideOverlay(__bind(function() {
+		                  return this.applyMoves(steps /* , __bind(function() {
+		                    return this.view.showControls();
+		                  }, this) */
+		                  );
+		                }, this));
+		              }, this),
+		              error: __bind(function(_arg) {
+		                var msg;
+		                msg = _arg.msg;
+		                this.view.hideOverlay();
+		                return this.view.showControls();
+		              }, this)
+		            });
+		          }, this));
+		        //}, this));
+		      }
+		    };
+		    Puzzle.prototype.handleCellClicked = function(rowNum, colNum) {
+		      var move;
+		      if (this.view.isInteractive() & !this.view.inputMode) {
+		        move = this.grid.positionToMove(rowNum, colNum);
+		        if (move != null) {
+		          return this.applyMoves([move]);
+		        }
+		      }
+		    };
+		    Puzzle.prototype.handleInputClicked = function() {
+		      this.view.toggleDraggable();
+		      if(this.view.inputMode){
+		        this.view.controlBarView.controls.inputBtn.innerHTML="submit";
+		      }else{
+		        this.view.controlBarView.controls.inputBtn.innerHTML="input";
+		      }
+		      // var gridArray=[[2,6,3,4],[5,1,8,12],[9,15,11,7],[0,13,10,14]];
+              // var emptyPos=[3,0];
+              // var gridState = new Grid(gridArray, emptyPos);
+              // console.log(gridState);
+              // this.grid = gridState;
+              // this.view.setGrid(gridState);
+            };
+            Puzzle.prototype.handleResetClicked = function() {
+                this.grid = this.lastState;
+                this.view.setGrid(this.lastState);
+            };
+		    return Puzzle;
+		  })();
+		}).call(this);
+	</script>
+</head>
+<body>
+	<div class="center">
+		<div id="puzzle"></div>
+	</div>
+	<script>
+		var puzzle = new Puzzle($('#puzzle'))
+	</script>
+</body>
+</html>
