@@ -197,6 +197,15 @@ body {height: 100%;margin: 0;background-color: #f0f0f0;}
 		    Grid.prototype.isSolved = function() {
 		      return this.lowerSolutionBound() === 0;
 		    };
+		    Grid.prototype.isSolvable = function() {
+		      zero_row = this.grid.findIndex(x => x.includes(0)) + 1;  //this.emptyPos[0] + 1;
+		      flat_array = this.grid.flat();
+		      inversion_cnt = flat_array.reduce(
+		        (count, num, i) => {
+		          return count + flat_array.slice(i + 1).filter(n => n !== 0 && num > n).length;
+		        }, 0);
+		      return (zero_row % 2 === 0) ? (inversion_cnt % 2 === 0) : (inversion_cnt % 2 !== 0);
+		    };
 		    Grid.prototype.log = function() {
 		      var row, _i, _len, _ref, _results;
 		      console.log("Empty: " + this.emptyPos);
@@ -828,6 +837,13 @@ body {height: 100%;margin: 0;background-color: #f0f0f0;}
 		      }
 		    };
 		    Puzzle.prototype.handleInputClicked = function() {
+		      if(this.view.inputMode){
+		        solvable = this.grid.isSolvable();
+		        if(!solvable){
+		          alert("Puzzle unsolvable. Please randomly swap two numbers once and try again.")
+		          return;
+		        }
+		      }
 		      this.view.toggleDraggable();
 		      if(this.view.inputMode){
 		        this.view.controlBarView.controls.inputBtn.innerHTML="submit";
