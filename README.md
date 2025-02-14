@@ -6,6 +6,7 @@ Forked from [jlfwong/fifteen-puzzle](https://github.com/jlfwong/fifteen-puzzle) 
 New features include:
 - Customizing puzzle states via drag-and-drop
 - Resetting puzzle states
+- Check solvable
 - Visualizing the solution path
 - A modern colour scheme inspired by children's puzzle toy
 
