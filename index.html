@@ -751,6 +751,8 @@ body {height: 100%;margin: 0;background-color: #f0f0f0;}
 		        controller: this
 		      });
 		      this.lastState = new Grid(INIT_GRID, [3, 3]);
+		      // Scale to fullscreen
+		      container.css({'transform':'scale('+Math.min(window.innerHeight/720,window.innerWidth/425).toFixed(1)+')'});
 		    }
 		    Puzzle.prototype.shuffle = function(nMoves, cb) {
 		      return this.applyMoves(randomMoveList(this.grid, nMoves), cb);
