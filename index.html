@@ -12,7 +12,7 @@
   20%, 40%, 60%, 80% {transform: rotate(1.5deg);}
 }
 .shaking {animation: shake 1.5s ease-in-out infinite;}
-body {height: 100%;margin: 0;background-color: #f0f0f0;}
+body {height: 100%;margin: 0;background-color: #f0f0f0;touch-action:none;}
 .center{position: absolute;top: 50%;left: 50%;transform: translate(-50%, -50%);}
 .puzzle-container{width:425px;/*height:475px;*/overflow:hidden}
 .puzzle{overflow:hidden;border-radius:5px;-webkit-border-radius:5px;-moz-border-radius:5px;-o-border-radius:5px;-ms-border-radius:5px;position:relative;width:425px;height:720px;background-color:#e5e5e5;font-family:sans-serif;user-select:none;-webkit-user-select:none;-moz-user-select:none;-o-user-select:none;-ms-user-select:none;}
@@ -850,6 +850,7 @@ body {height: 100%;margin: 0;background-color: #f0f0f0;}
 		      if(this.view.inputMode){
 		        this.view.controlBarView.controls.inputBtn.innerHTML="submit";
 		      }else{
+		        this.grid._lowerSolutionBound=null;
 		        this.view.controlBarView.controls.inputBtn.innerHTML="input";
 		      }
 		      // var gridArray=[[2,6,3,4],[5,1,8,12],[9,15,11,7],[0,13,10,14]];
