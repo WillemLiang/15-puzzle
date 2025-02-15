@@ -202,7 +202,7 @@ body {height: 100%;margin: 0;background-color: #f0f0f0;}
 		      flat_array = this.grid.flat();
 		      inversion_cnt = flat_array.reduce(
 		        (count, num, i) => {
-		          return count + flat_array.slice(i + 1).filter(n => n !== 0 && num > n).length;
+		          return count + flat_array.slice(i + 1).filter(n => n !== 0 && num > n).length
 		        }, 0);
 		      return (zero_row % 2 === 0) ? (inversion_cnt % 2 === 0) : (inversion_cnt % 2 !== 0);
 		    };
@@ -531,8 +531,8 @@ body {height: 100%;margin: 0;background-color: #f0f0f0;}
 		      this.node.append(this.solution);
 		    };
 		    SolutionView.prototype.showSolution = function(solution){
-		    	this.solution_steps = solution;
-		    	this.solution[0].innerHTML = solution.map(x=>"<span>"+x+"</span>").join("\n");
+		      this.solution_steps = solution;
+		      this.solution[0].innerHTML = solution.map(x=>"<span>"+x+"</span>").join("\n");
 		    };
 		    return SolutionView;
 		  })();
@@ -556,72 +556,72 @@ body {height: 100%;margin: 0;background-color: #f0f0f0;}
 		          if (num === 0) {
 		            this.emptyPos = [rowNum, colNum];
 		          }
-	              cell = new PuzzleCellView({
-	                number: num,
-	                draggable: this.inputMode,
-	                controller: this.controller
-	              });
-	              cell.setPosition(rowNum, colNum);
-	              //Drag & Drop
-	              cell.node[0].addEventListener('dragstart', (e) => {
-	                  draggedElement = e.target;
-	                  e.dataTransfer.effectAllowed = 'move';
-	                  e.dataTransfer.setData('text/html', e.target.outerHTML);
-	                  e.target.classList.add('dragging');
-	              });
-	              cell.node[0].addEventListener('dragend', (e) => {
-	                  e.target.classList.remove('dragging');
-	              });
-	              cell.node[0].addEventListener('dragover', (e) => {
-	                  e.preventDefault();
-	                  e.dataTransfer.dropEffect = 'move';
-	              });
-	              cell.node[0].addEventListener('dragenter', (e) => {
-	                  e.target.classList.add('over');
-	              });
-	              cell.node[0].addEventListener('dragleave', (e) => {
-	                  e.target.classList.remove('over');
-	              });
-	              cell.node[0].addEventListener('drop', (e) => {
-	                  e.preventDefault();
-	                  if (e.target.classList.contains('cell') && e.target !== draggedElement) {
-	                      const targetElement = e.target;
-	                      // Swap positions
-	                      const draggedTop = draggedElement.style.top;
-	                      const draggedLeft = draggedElement.style.left;
-	                      const targetTop = targetElement.style.top;
-	                      const targetLeft = targetElement.style.left;
-	                      draggedElement.style.top = targetTop;
-	                      draggedElement.style.left = targetLeft;
-	                      targetElement.style.top = draggedTop;
-	                      targetElement.style.left = draggedLeft;
-	                      draggedElement.classList.remove('dragging');
-	                      targetElement.classList.remove('over');
-	                      // Set puzzle state
-	                      num1=draggedElement.innerHTML===""?0:parseInt(draggedElement.innerHTML);
-	                      num2=targetElement.innerHTML===""?0:parseInt(targetElement.innerHTML);
-	                      r1 = this.controller.grid.grid.findIndex(x=>x.includes(num1));
-	                      c1 = this.controller.grid.grid[r1].indexOf(num1);
-	                      r2 = this.controller.grid.grid.findIndex(x=>x.includes(num2));
-	                      c2 = this.controller.grid.grid[r2].indexOf(num2);
-	                      puzzle.grid.grid[r1][c1]=num2;
-	                      puzzle.grid.grid[r2][c2]=num1;
-	                      this.controller.grid.grid[r1][c1]=num2;
-	                      this.controller.grid.grid[r2][c2]=num1;
-	                      [ this.cellViews[r1][c1], this.cellViews[r2][c2] ] = [ this.cellViews[r2][c2], this.cellViews[r1][c1] ];
-	                      if(num1===0){
-	                        puzzle.grid.emptyPos = [r2,c2];
-	                        this.controller.grid.emptyPos = [r2,c2];
-	                        this.emptyPos = [r2,c2];
-	                      }
-	                      if(num2===0){
-	                        puzzle.grid.emptyPos = [r1,c1];
-	                        this.controller.grid.emptyPos = [r1,c1];
-	                        this.emptyPos = [r1,c1];
-	                      }
+	            cell = new PuzzleCellView({
+	              number: num,
+	              draggable: this.inputMode,
+	              controller: this.controller
+	            });
+	            cell.setPosition(rowNum, colNum);
+	            //Drag & Drop
+	            cell.node[0].addEventListener('dragstart', (e) => {
+	              draggedElement = e.target;
+	              e.dataTransfer.effectAllowed = 'move';
+	              e.dataTransfer.setData('text/html', e.target.outerHTML);
+	              e.target.classList.add('dragging');
+	            });
+	            cell.node[0].addEventListener('dragend', (e) => {
+	              e.target.classList.remove('dragging');
+	            });
+	            cell.node[0].addEventListener('dragover', (e) => {
+	              e.preventDefault();
+	              e.dataTransfer.dropEffect = 'move';
+	            });
+	            cell.node[0].addEventListener('dragenter', (e) => {
+	              e.target.classList.add('over');
+	            });
+	            cell.node[0].addEventListener('dragleave', (e) => {
+	              e.target.classList.remove('over');
+	            });
+	            cell.node[0].addEventListener('drop', (e) => {
+	              e.preventDefault();
+	              if (e.target.classList.contains('cell') && e.target !== draggedElement) {
+	                  const targetElement = e.target;
+	                  // Swap positions
+	                  const draggedTop = draggedElement.style.top;
+	                  const draggedLeft = draggedElement.style.left;
+	                  const targetTop = targetElement.style.top;
+	                  const targetLeft = targetElement.style.left;
+	                  draggedElement.style.top = targetTop;
+	                  draggedElement.style.left = targetLeft;
+	                  targetElement.style.top = draggedTop;
+	                  targetElement.style.left = draggedLeft;
+	                  draggedElement.classList.remove('dragging');
+	                  targetElement.classList.remove('over');
+	                  // Set puzzle state
+	                  num1=draggedElement.innerHTML===""?0:parseInt(draggedElement.innerHTML);
+	                  num2=targetElement.innerHTML===""?0:parseInt(targetElement.innerHTML);
+	                  r1 = this.controller.grid.grid.findIndex(x=>x.includes(num1));
+	                  c1 = this.controller.grid.grid[r1].indexOf(num1);
+	                  r2 = this.controller.grid.grid.findIndex(x=>x.includes(num2));
+	                  c2 = this.controller.grid.grid[r2].indexOf(num2);
+	                  puzzle.grid.grid[r1][c1]=num2;
+	                  puzzle.grid.grid[r2][c2]=num1;
+	                  this.controller.grid.grid[r1][c1]=num2;
+	                  this.controller.grid.grid[r2][c2]=num1;
+	                  [ this.cellViews[r1][c1], this.cellViews[r2][c2] ] = [ this.cellViews[r2][c2], this.cellViews[r1][c1] ];
+	                  if(num1===0){
+	                    puzzle.grid.emptyPos = [r2,c2];
+	                    this.controller.grid.emptyPos = [r2,c2];
+	                    this.emptyPos = [r2,c2];
 	                  }
-	              });
-	              this.node.append(cell.node);
+	                  if(num2===0){
+	                    puzzle.grid.emptyPos = [r1,c1];
+	                    this.controller.grid.emptyPos = [r1,c1];
+	                    this.emptyPos = [r1,c1];
+	                  }
+	                }
+	            });
+	            this.node.append(cell.node);
 		          this.cellViews[rowNum].push(cell);
 		        }
 		      }
@@ -642,12 +642,12 @@ body {height: 100%;margin: 0;background-color: #f0f0f0;}
 		      targetCellViews = [[null,null,null,null],[null,null,null,null],[null,null,null,null],[null,null,null,null]];
 		      this.cellViews.forEach(row=>{
 			    for(cell of row){
-			        if(cell){
-			            idx_row = grid.grid.findIndex(x=>x.includes(cell.number));
-			            idx_col = grid.grid[idx_row].indexOf(cell.number);
-			            cell.setPosition(idx_row, idx_col);
-			            targetCellViews[idx_row][idx_col] = cell;
-			        }
+			      if(cell){
+			        idx_row = grid.grid.findIndex(x=>x.includes(cell.number));
+			        idx_col = grid.grid[idx_row].indexOf(cell.number);
+			        cell.setPosition(idx_row, idx_col);
+			        targetCellViews[idx_row][idx_col] = cell;
+			      }
 			    }
 			  });
 			  this.cellViews = targetCellViews;
@@ -697,8 +697,10 @@ body {height: 100%;margin: 0;background-color: #f0f0f0;}
 		      _ref2 = directionToDelta(sourceDirection), deltaRow = _ref2[0], deltaCol = _ref2[1];
 		      this.emptyPos = (_ref3 = [targetRow + deltaRow, targetCol + deltaCol], sourceRow = _ref3[0], sourceCol = _ref3[1], _ref3);
 		      cellView = this.cellViews[sourceRow][sourceCol];
+		      emptyCell = this.cellViews[targetRow][targetCol];
 		      this.cellViews[targetRow][targetCol] = cellView;
-		      this.cellViews[sourceRow][sourceCol] = null;
+		      this.cellViews[sourceRow][sourceCol] = emptyCell;
+		      emptyCell.setPosition(sourceRow, sourceCol);
 		      return cellView.setPosition(targetRow, targetCol, duration, cb);
 		    };
 		    PuzzleView.prototype.hideControls = function(cb) {
@@ -864,6 +866,7 @@ body {height: 100%;margin: 0;background-color: #f0f0f0;}
 		    return Puzzle;
 		  })();
 		}).call(this);
+
 	</script>
 </head>
 <body>
