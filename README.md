@@ -10,4 +10,4 @@ New features include:
 - Visualizing the solution path
 - A modern colour scheme inspired by children's puzzle toy
 
-![Children's Puzzle Toy](puzzle.jpg)
+![Children's Puzzle Toy](puzzle.jpeg)
